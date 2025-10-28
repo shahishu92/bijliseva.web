@@ -1,13 +1,12 @@
-// app/login/page.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
   ConfirmationResult,
 } from "firebase/auth";
-import { auth } from "../../firebase/clientApp"; // <-- exact path (2 levels up)
+import { auth } from "../../firebase/clientApp"; // exact path
 
 declare global {
   interface Window {
@@ -17,25 +16,22 @@ declare global {
 }
 
 export default function LoginPage() {
-  const [phone, setPhone] = useState("+91"); // example default
+  const [phone, setPhone] = useState("+91");
   const [otp, setOtp] = useState("");
 
-  // create recaptcha verifier on the client only
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // only create once
+    // ✅ ensure RecaptchaVerifier uses `auth` object, not string
     if (!window.recaptchaVerifier) {
       window.recaptchaVerifier = new RecaptchaVerifier(
-        "recaptcha-container",
-        { size: "invisible" },
-        auth // must pass Firebase Auth instance (not a string)
+        auth, // ✅ first argument is the Auth instance (not a string)
+        "recaptcha-container", // ✅ ID of the container element
+        {
+          size: "invisible",
+        }
       );
     }
-    // cleanup optional
-    return () => {
-      // keep instance for convenience (you can clear if needed)
-    };
   }, []);
 
   const sendOtp = async () => {
@@ -43,43 +39,40 @@ export default function LoginPage() {
       const appVerifier = window.recaptchaVerifier!;
       const confirmation = await signInWithPhoneNumber(auth, phone, appVerifier);
       window.confirmationResult = confirmation;
-      alert("OTP sent");
-    } catch (err) {
-      console.error("sendOtp error:", err);
-      alert("Error sending OTP: " + ((err as Error).message || err));
+      alert("OTP sent successfully");
+    } catch (error) {
+      console.error("Error sending OTP:", error);
     }
   };
 
   const verifyOtp = async () => {
     try {
       const result = await window.confirmationResult!.confirm(otp);
-      console.log("Phone verified user:", result.user);
+      console.log("User verified:", result.user);
       alert("Phone verified!");
-    } catch (err) {
-      console.error("verifyOtp error:", err);
-      alert("Invalid OTP or verification failed.");
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
+      alert("Invalid OTP");
     }
   };
 
   return (
-    <main>
-      <div id="recaptcha-container" /> {/* invisible recaptcha mounts here */}
-
-      <div>
-        <label>Phone (include country code)</label>
-        <input
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="+911234567890"
-        />
-        <button onClick={sendOtp}>Send OTP</button>
-      </div>
-
-      <div>
-        <label>OTP</label>
-        <input value={otp} onChange={(e) => setOtp(e.target.value)} />
-        <button onClick={verifyOtp}>Verify OTP</button>
-      </div>
+    <main style={{ padding: 20 }}>
+      <div id="recaptcha-container"></div>
+      <h2>Login with OTP</h2>
+      <input
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        placeholder="+911234567890"
+      />
+      <button onClick={sendOtp}>Send OTP</button>
+      <br />
+      <input
+        value={otp}
+        onChange={(e) => setOtp(e.target.value)}
+        placeholder="Enter OTP"
+      />
+      <button onClick={verifyOtp}>Verify OTP</button>
     </main>
   );
 }
