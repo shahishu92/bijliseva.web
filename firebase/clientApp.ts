@@ -1,5 +1,5 @@
 // firebase/clientApp.ts
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
@@ -11,6 +11,10 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
 };
 
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+// initialize app once
+const app = initializeApp(firebaseConfig);
+
+// export the Auth instance
 export const auth = getAuth(app);
+
 export default app;
