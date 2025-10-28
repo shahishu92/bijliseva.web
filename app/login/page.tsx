@@ -6,7 +6,7 @@ import {
   signInWithPhoneNumber,
   ConfirmationResult,
 } from "firebase/auth";
-import { auth } from "../../firebase/clientApp"; // exact path
+import { auth } from "../../../firebase/clientApp"; // exact path
 
 declare global {
   interface Window {
